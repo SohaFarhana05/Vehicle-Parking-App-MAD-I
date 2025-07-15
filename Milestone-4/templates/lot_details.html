@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Lot Details - Vehicle Parking{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    {% block content %}
+    <style>
+        .spots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+        }
+        .spot-card {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        .spot-card.available { background-color: #c8e6c9; }
+        .spot-card.occupied { background-color: #ffcdd2; }
+        .spot-card.reserved { background-color: #fff9c4; }
+    </style>
+
+    <h1>{{ lot.prime_location_name }}</h1>
+    
+    <!-- Lot Information -->
+    <section>
+        <h2>Lot Information</h2>
+        <p><strong>Price per Hour:</strong> ${{ lot.price }}</p>
+        <p><strong>Address:</strong> {{ lot.address }}</p>
+        <p><strong>Pin Code:</strong> {{ lot.pin_code }}</p>
+        <p><strong>Total Spots:</strong> {{ lot.maximum_number_of_spots }}</p>
+        <p><strong>Available Spots:</strong> {{ spots|selectattr('status', 'equalto', 'A')|list|length }}</p>
+        <p><strong>Occupied Spots:</strong> {{ spots|selectattr('status', 'equalto', 'O')|list|length }}</p>
+        <p><strong>Reserved Spots:</strong> {{ spots|selectattr('status', 'equalto', 'R')|list|length }}</p>
+    </section>
+
+    <!-- Parking Spots Grid -->
+    <section>
+        <h2>Parking Spots Status</h2>
+        <div>
+            <span style="background-color: #c8e6c9; padding: 5px; margin-right: 10px;">Available</span>
+            <span style="background-color: #ffcdd2; padding: 5px; margin-right: 10px;">Occupied</span>
+            <span style="background-color: #fff9c4; padding: 5px;">Reserved</span>
+        </div>
+        <br>
+        <div class="spots-grid">
+            {% for spot in spots %}
+                <div class="spot-card 
+                    {% if spot.status == 'A' %}available
+                    {% elif spot.status == 'O' %}occupied
+                    {% elif spot.status == 'R' %}reserved
+                    {% endif %}"
+                     title="Spot {{ spot.id }} - {{ spot.get_status_display() }}">
+                    Spot {{ loop.index }}
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+    <br>
+    <a href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
+    {% endblock %}
+</body>
+</html>
