@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Parking Lots - Vehicle Parking</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    {% extends "base.html" %}
+    {% block title %}Available Parking Lots - Vehicle Parking{% endblock %}
+
+    {% block content %}
+        <h1>Available Parking Lots</h1>
+        
+        {% if lot_info %}
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Location</th>
+                        <th>Address</th>
+                        <th>PIN</th>
+                        <th>Price/Hour</th>
+                        <th>Availability</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for info in lot_info %}
+                    <tr>
+                        <td>{{ info.lot.prime_location_name }}</td>
+                        <td>{{ info.lot.address }}</td>
+                        <td>{{ info.lot.pin_code }}</td>
+                        <td>${{ info.lot.price }}</td>
+                        <td>{{ info.available_spots }}/{{ info.total_spots }} spots</td>
+                        <td>
+                            {% if info.available_spots > 0 %}
+                                <a href="{{ url_for('reserve_spot', lot_id=info.lot.id) }}" 
+                                   onclick="return confirm('Reserve a parking spot in {{ info.lot.prime_location_name }}?')">
+                                    Reserve Spot
+                                </a>
+                            {% else %}
+                                <span>No Spots Available</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>There are currently no parking lots available. Please check back later.</p>
+        {% endif %}
+        
+        <hr>
+        
+        <h2>Quick Statistics</h2>
+        <p>Total Lots: {{ lot_info|length }}</p>
+        <p>Total Available Spots: {{ lot_info|sum(attribute='available_spots') }}</p>
+        <p>Total Spots: {{ lot_info|sum(attribute='total_spots') }}</p>
+        <p>
+            Overall Availability: 
+            {% set total_spots = lot_info|sum(attribute='total_spots') %}
+            {% set available_spots = lot_info|sum(attribute='available_spots') %}
+            {% if total_spots > 0 %}
+                {{ "%.0f"|format((available_spots / total_spots) * 100) }}%
+            {% else %}
+                0%
+            {% endif %}
+        </p>
+        <br>
+        <a href="{{ url_for('user_dashboard') }}">Back to User Dashboard</a>
+    {% endblock %}
+</body>
+</html>

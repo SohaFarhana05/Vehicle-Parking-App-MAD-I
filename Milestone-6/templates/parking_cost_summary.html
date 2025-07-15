@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Parking Cost Summary{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Parking Cost Summary</h1>
+    
+    <!-- Current Session Info -->
+    {% if current_reservation %}
+    <div class="current-session">
+        <h2>Current Parking Session</h2>
+        <p><strong>Status:</strong> {{ current_reservation.get_status() }}</p>
+        {% if current_reservation.parking_timestamp %}
+        <p><strong>Duration:</strong> {{ current_reservation.get_parking_duration_formatted() }}</p>
+        <p><strong>Current Cost:</strong> ${{ "%.2f"|format(current_cost) }}</p>
+        {% endif %}
+    </div>
+    <hr>
+    {% endif %}
+    
+    <!-- Summary Statistics -->
+    <div class="summary-stats">
+        <h2>Summary</h2>
+        <p><strong>Total Parking Sessions:</strong> {{ total_sessions }}</p>
+        <p><strong>Total Amount Spent:</strong> ${{ "%.2f"|format(total_cost) }}</p>
+        {% if total_sessions > 0 %}
+        <p><strong>Average Cost per Session:</strong> ${{ "%.2f"|format(total_cost / total_sessions) }}</p>
+        {% endif %}
+    </div>
+    <hr>
+    
+    <!-- Detailed History -->
+    <div class="parking-history">
+        <h2>Parking History</h2>
+        {% if completed_reservations %}
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Location</th>
+                    <th>Duration</th>
+                    <th>Cost</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reservation, spot, lot in completed_reservations %}
+                <tr>
+                    <td>{{ reservation.reservation_timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ lot.prime_location_name }}</td>
+                    <td>{{ reservation.get_parking_duration_formatted() }}</td>
+                    <td>${{ "%.2f"|format(reservation.parking_cost) if reservation.parking_cost else "0.00" }}</td>
+                    <td>{{ reservation.get_status() }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No parking history found.</p>
+        {% endif %}
+    </div>
+    
+    <div class="actions">
+        <a href="{{ url_for('user_dashboard') }}">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

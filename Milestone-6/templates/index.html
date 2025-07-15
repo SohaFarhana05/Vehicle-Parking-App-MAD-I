@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Vehicle Parking Management System{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    {% block content %}
+        <h1>Welcome to the Parking App</h1>
+        <p>Manage your parking needs efficiently with our comprehensive parking management system.</p>
+        
+        <h2>Existing User</h2>
+        <p>Already have an account? Sign in to access your dashboard.</p>
+        <a href="{{ url_for('login') }}">Login</a>
+        
+        <h2>New User</h2>
+        <p>First time here? Create your account to get started.</p>
+        <a href="{{ url_for('registration') }}">Register</a>
+        
+        <hr>
+        <p>&copy; 2025 Vehicle Parking App. All rights reserved.</p>
+    {% endblock %}
+</body>
+</html>
