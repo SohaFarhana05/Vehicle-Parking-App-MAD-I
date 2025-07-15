@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}User Dashboard - Vehicle Parking{% endblock %}</title>
+</head>
+<body>
+    {% block content %}
+    <header>
+        <h1>User Dashboard</h1>
+        <p>Welcome, {{ user.full_name if user else 'User' }}</p>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </header>
+
+    <main>
+        <!-- Current Parking Status -->
+        <section>
+            <h2>Current Parking Status</h2>
+            {% if current_reservation %}
+                {% if current_reservation.parking_timestamp %}
+                    <!-- User has occupied the spot -->
+                    <div>
+                        <h3>Active Parking Session</h3>
+                        <p><strong>Spot:</strong> {{ current_reservation.spot.lot.prime_location_name }} - Spot #{{ current_reservation.spot_id }}</p>
+                        <p><strong>Reserved:</strong> {{ current_reservation.reservation_timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                        <p><strong>Occupied Since:</strong> {{ current_reservation.parking_timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                        <p><strong>Duration:</strong> <span id="duration-timer"></span></p>
+                        <a href="{{ url_for('release_spot') }}" 
+                           onclick="return confirm('Are you sure you want to release this parking spot?')">Release Spot</a>
+                    </div>
+                {% else %}
+                    <!-- User has reserved but not occupied the spot -->
+                    <div>
+                        <h3>Spot Reserved</h3>
+                        <p><strong>Spot:</strong> {{ current_reservation.spot.lot.prime_location_name }} - Spot #{{ current_reservation.spot_id }}</p>
+                        <p><strong>Reserved:</strong> {{ current_reservation.reservation_timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                        <p>Your parking spot is reserved. Click "Occupy Spot" to start the parking timer.</p>
+                        <a href="{{ url_for('occupy_spot') }}">Occupy Spot</a>
+                        <a href="{{ url_for('release_spot') }}" 
+                           onclick="return confirm('Are you sure you want to cancel this reservation?')">Cancel Reservation</a>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div>
+                    <h3>No Active Parking</h3>
+                    <p>You currently have no active parking reservations.</p>
+                    <a href="{{ url_for('view_lots') }}">Find Parking</a>
+                </div>
+            {% endif %}
+        </section>
+        
+        <hr>
+
+        <!-- Quick Stats -->
+        <section>
+            <h2>Available Lots</h2>
+            <p>{{ lots|length }}</p>
+            <a href="{{ url_for('view_lots') }}">View All</a>
+        </section>
+
+        <hr>
+
+        <!-- Recent Parking History -->
+        <section>
+            <h2>Recent Parking History</h2>
+            <a href="{{ url_for('parking_history') }}">View All History</a>
+            {% if history %}
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th>Location</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Duration (Hours)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reservation in history[:5] %}
+                        <tr>
+                            <td>{{ reservation.spot.lot.prime_location_name if reservation.spot and reservation.spot.lot else 'N/A' }}</td>
+                            <td>{{ reservation.parking_timestamp.strftime('%m/%d %H:%M') if reservation.parking_timestamp else 'N/A' }}</td>
+                            <td>
+                                {% if reservation.leaving_timestamp %}
+                                    {{ reservation.leaving_timestamp.strftime('%m/%d %H:%M') }}
+                                {% else %}
+                                    Active
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if reservation.leaving_timestamp and reservation.parking_timestamp %}
+                                    {% set duration = reservation.leaving_timestamp - reservation.parking_timestamp %}
+                                    {{ "%.2f"|format(duration.total_seconds() / 3600) }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if reservation.leaving_timestamp %}
+                                    Completed
+                                {% elif reservation.parking_timestamp %}
+                                    Occupied
+                                {% else %}
+                                    Reserved
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No parking history found.</p>
+            {% endif %}
+        </section>
+    </main>
+
+    {% if current_reservation and current_reservation.parking_timestamp %}
+    {% endif %}
+    {% endblock %}
+</body>
+</html>

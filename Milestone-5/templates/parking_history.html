@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Parking History - Vehicle Parking{% endblock %}</title>
+</head>
+<body>
+    {% block content %}
+    <header>
+        <h1>Parking History</h1>
+        <a href="{{ url_for('user_dashboard') }}">Back to Dashboard</a>
+    </header>
+
+    <main>
+        <section>
+            <h2>Your Parking History</h2>
+            {% if history %}
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th>Location</th>
+                            <th>Spot ID</th>
+                            <th>Reserved On</th>
+                            <th>Parked On</th>
+                            <th>Left On</th>
+                            <th>Duration (Hours)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reservation in history %}
+                        <tr>
+                            <td>{{ reservation.spot.lot.prime_location_name if reservation.spot and reservation.spot.lot else 'N/A' }}</td>
+                            <td>{{ reservation.spot_id }}</td>
+                            <td>{{ reservation.reservation_timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ reservation.parking_timestamp.strftime('%Y-%m-%d %H:%M') if reservation.parking_timestamp else 'N/A' }}</td>
+                            <td>
+                                {% if reservation.leaving_timestamp %}
+                                    {{ reservation.leaving_timestamp.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                                Active
+                            {% endif %}
+                            </td>
+                            <td>
+                                {% if reservation.leaving_timestamp and reservation.parking_timestamp %}
+                                    {% set duration = reservation.leaving_timestamp - reservation.parking_timestamp %}
+                                    {{ "%.2f"|format(duration.total_seconds() / 3600) }}
+                            {% else %}
+                                -
+                            {% endif %}
+                            </td>
+                            <td>
+                                {% if reservation.leaving_timestamp %}
+                                    Completed
+                            {% elif reservation.parking_timestamp %}
+                                Occupied
+                            {% else %}
+                                Reserved
+                            {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>You have no parking history.</p>
+            {% endif %}
+        </section>
+    </main>
+    {% endblock %}
+</body>
+</html>
