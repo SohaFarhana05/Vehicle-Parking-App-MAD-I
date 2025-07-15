@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Vehicle Parking</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark shadow">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-parking me-2"></i>Admin Dashboard
+            </span>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-light">
+                <i class="fas fa-sign-out-alt me-1"></i>Logout
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-building fa-2x mb-2"></i>
+                        <h5>Total Parking Lots</h5>
+                        <h2>{{ lots|length }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-square-parking fa-2x mb-2"></i>
+                        <h5>Total Spots</h5>
+                        <h2>{{ total_spots }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-car fa-2x mb-2"></i>
+                        <h5>Occupied Spots</h5>
+                        <h2>{{ occupied_spots }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-clock fa-2x mb-2"></i>
+                        <h5>Reserved Spots</h5>
+                        <h2>{{ reserved_spots }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-secondary text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-square-parking fa-2x mb-2"></i>
+                        <h5>Available Spots</h5>
+                        <h2>{{ available_spots }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Stats Row -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users fa-2x mb-2"></i>
+                        <h5>Total Users</h5>
+                        <h2>{{ users|length }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Parking Lots Management -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-building me-2"></i>Parking Lots Management
+                </h5>
+                <a href="{{ url_for('create_lot') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Create New Lot
+                </a>
+            </div>
+            <div class="card-body">
+                {% if lots %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Location Name</th>
+                                    <th>Price/Hour</th>
+                                    <th>Address</th>
+                                    <th>Max Spots</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lot in lots %}
+                                <tr>
+                                    <td>{{ lot.id }}</td>
+                                    <td>{{ lot.prime_location_name }}</td>
+                                    <td>${{ lot.price }}</td>
+                                    <td>{{ lot.address }}</td>
+                                    <td>{{ lot.maximum_number_of_spots }}</td>
+                                    <td>
+                                        <a href="{{ url_for('lot_details', lot_id=lot.id) }}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye me-1"></i>View
+                                        </a>
+                                        <a href="{{ url_for('edit_lot', lot_id=lot.id) }}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit me-1"></i>Edit
+                                        </a>
+                                        <a href="{{ url_for('delete_lot', lot_id=lot.id) }}" class="btn btn-sm btn-danger" 
+                                           onclick="return confirm('Are you sure you want to delete this lot?')">
+                                            <i class="fas fa-trash me-1"></i>Delete
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No parking lots found. <a href="{{ url_for('create_lot') }}">Create the first one</a>.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Users Management -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2"></i>Users Management
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if users %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Current Spot</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user.id }}</td>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.full_name }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>{{ user.phone }}</td>
+                                    <td>
+                                        {% set current_spot = user.get_current_spot() %}
+                                        {% if current_spot %}
+                                            Lot {{ current_spot.lot_id }}, Spot {{ current_spot.id }}
+                                        {% else %}
+                                            No active parking
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No users registered yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

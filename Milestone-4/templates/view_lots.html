@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Parking Lots - Vehicle Parking</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary shadow">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('user_dashboard') }}">
+                <i class="fas fa-arrow-left me-2"></i>User Dashboard
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-light">
+                <i class="fas fa-sign-out-alt me-1"></i>Logout
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-search me-2"></i>Available Parking Lots
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if lot_info %}
+                            <div class="row">
+                                {% for info in lot_info %}
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">{{ info.lot.prime_location_name }}</h6>
+                                            {% if info.available_spots > 0 %}
+                                                <span class="badge bg-success">Available</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Full</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="card-text">
+                                                <i class="fas fa-map-marker-alt me-2"></i>{{ info.lot.address }}
+                                            </p>
+                                            <p class="card-text">
+                                                <i class="fas fa-map-pin me-2"></i>PIN: {{ info.lot.pin_code }}
+                                            </p>
+                                            <p class="card-text">
+                                                <i class="fas fa-dollar-sign me-2"></i>Price: ${{ info.lot.price }}/hour
+                                            </p>
+                                            <p class="card-text">
+                                                <i class="fas fa-parking me-2"></i>
+                                                Available: {{ info.available_spots }}/{{ info.total_spots }} spots
+                                            </p>
+                                            
+                                            <!-- Progress bar showing availability -->
+                                            <div class="mb-3">
+                                                {% set availability_percent = (info.available_spots / info.total_spots * 100) if info.total_spots > 0 else 0 %}
+                                                <div class="progress">
+                                                    <div class="progress-bar 
+                                                        {% if availability_percent > 50 %}bg-success
+                                                        {% elif availability_percent > 25 %}bg-warning
+                                                        {% else %}bg-danger{% endif %}" 
+                                                        role="progressbar" 
+                                                        style="width: {{ availability_percent }}%">
+                                                        {{ "%.0f"|format(availability_percent) }}%
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">Availability</small>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer">
+                                            {% if info.available_spots > 0 %}
+                                                <a href="{{ url_for('reserve_spot', lot_id=info.lot.id) }}" 
+                                                   class="btn btn-primary w-100"
+                                                   onclick="return confirm('Reserve a parking spot in {{ info.lot.prime_location_name }}?')">
+                                                    <i class="fas fa-car me-1"></i>Reserve Spot
+                                                </a>
+                                            {% else %}
+                                                <button class="btn btn-secondary w-100" disabled>
+                                                    <i class="fas fa-times me-1"></i>No Spots Available
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle me-2"></i>No Parking Lots Found</h6>
+                                <p>There are currently no parking lots available. Please check back later.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>Quick Statistics
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <i class="fas fa-building fa-2x text-primary mb-2"></i>
+                                    <h5>{{ lot_info|length }}</h5>
+                                    <p class="text-muted mb-0">Total Lots</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                    <h5>{{ lot_info|sum(attribute='available_spots') }}</h5>
+                                    <p class="text-muted mb-0">Available Spots</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <i class="fas fa-square-parking fa-2x text-info mb-2"></i>
+                                    <h5>{{ lot_info|sum(attribute='total_spots') }}</h5>
+                                    <p class="text-muted mb-0">Total Spots</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border rounded p-3">
+                                    <i class="fas fa-percentage fa-2x text-warning mb-2"></i>
+                                    <h5>
+                                        {% set total_spots = lot_info|sum(attribute='total_spots') %}
+                                        {% set available_spots = lot_info|sum(attribute='available_spots') %}
+                                        {% if total_spots > 0 %}
+                                            {{ "%.0f"|format((available_spots / total_spots) * 100) }}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </h5>
+                                    <p class="text-muted mb-0">Availability</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
